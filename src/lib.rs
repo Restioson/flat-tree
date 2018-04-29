@@ -3,10 +3,14 @@
 #![doc(include = "../README.md")]
 #![cfg_attr(test, feature(plugin))]
 #![cfg_attr(test, plugin(clippy))]
+#![feature(generators, generator_trait)]
+
+#![no_std]
 
 mod iterator;
 
 pub use iterator::Iterator;
+use core::ops::Generator;
 
 /// Returns the flat-tree of the tree node at the specified depth and offset.
 ///
@@ -322,29 +326,30 @@ pub fn count(i: usize) -> usize {
 /// full_roots(16, &mut nodes);
 /// assert_eq!(nodes, [7]);
 /// ```
-pub fn full_roots(i: usize, nodes: &mut Vec<usize>) {
-  assert!(
-    is_even(i),
-    format!(
-      "You can only look up roots for depth 0 blocks, got index {}",
-      i
-    )
-  );
-  let mut tmp = i >> 1;
-  let mut offset = 0;
-  let mut factor = 1;
+pub fn full_roots(i: usize) -> impl Generator<Yield=usize, Return=()> {
+  if !is_even(i) {
+    panic!("You can only look up roots for depth 0 blocks, got index {}", i);
+  }
 
-  loop {
-    if tmp == 0 {
-      break;
+  move || {
+    let mut tmp = i >> 1;
+    let mut offset = 0;
+    let mut factor = 1;
+
+    loop {
+      if tmp == 0 {
+        break;
+      }
+      while factor * 2 <= tmp {
+        factor *= 2;
+      }
+
+      yield offset + factor - 1;
+
+      offset += 2 * factor;
+      tmp -= factor;
+      factor = 1;
     }
-    while factor * 2 <= tmp {
-      factor *= 2;
-    }
-    nodes.push(offset + factor - 1);
-    offset += 2 * factor;
-    tmp -= factor;
-    factor = 1;
   }
 }
 

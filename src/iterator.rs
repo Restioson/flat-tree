@@ -8,7 +8,7 @@
 //! ```
 use super::*;
 
-use std::iter;
+use core::iter;
 
 /// Iterator over a flat-tree.
 #[derive(Debug)]
